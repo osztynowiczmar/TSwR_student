@@ -17,39 +17,57 @@ end = 5
 traj_gen = Sinusoidal(np.array([0., 1.]), np.array([2., 2.]), np.array([0., 0.]))
 # traj_gen = Poly3(np.array([0., 0.]), np.array([pi/4, pi/6]), end)
 
-b_est_1 = None
-b_est_2 = None
-kp_est_1 = None
-kp_est_2 = None
-kd_est_1 = None
-kd_est_2 = None
-p1 = None
-p2 = None
+# ADRC JOINT CONTROLLER
+b_est_1 = 0.65
+b_est_2 = 6.9
+kp_est_1 = 64.0
+kp_est_2 = 100.0
+kd_est_1 = 16.0
+kd_est_2 = 20.0
+p1 = 30.0
+p2 = 35.0
+tryb_PD = 0
+
+#Zadanie6 - PD decentralized
+# b_est_1 = 0.65
+# b_est_2 = 6.9
+# kp_est_1 = 225.0
+# kp_est_2 = 144.0
+# kd_est_1 = 30.0
+# kd_est_2 = 24.0
+# p1 = 35.0
+# p2 = 40.0
+# tryb_PD = 1
+
+
 
 q0, qdot0, _ = traj_gen.generate(0.)
 q1_0 = np.array([q0[0], qdot0[0]])
 q2_0 = np.array([q0[1], qdot0[1]])
 controller = ADRController(Tp, params=[[b_est_1, kp_est_1, kd_est_1, p1, q1_0],
-                                       [b_est_2, kp_est_2, kd_est_2, p2, q2_0]])
+                                      [b_est_2, kp_est_2, kd_est_2, p2, q2_0]])
+
 
 Q, Q_d, u, T = simulate("PYBULLET", traj_gen, controller, Tp, end)
 
-eso1 = np.array(controller.joint_controllers[0].eso.states)
-eso2 = np.array(controller.joint_controllers[1].eso.states)
+if tryb_PD == 0:
+    eso1 = np.array(controller.joint_controllers[0].eso.states)
+    eso2 = np.array(controller.joint_controllers[1].eso.states)
 
-plt.subplot(221)
-plt.plot(T, eso1[:, 0])
-plt.plot(T, Q[:, 0], 'r')
-plt.subplot(222)
-plt.plot(T, eso1[:, 1])
-plt.plot(T, Q[:, 2], 'r')
-plt.subplot(223)
-plt.plot(T, eso2[:, 0])
-plt.plot(T, Q[:, 1], 'r')
-plt.subplot(224)
-plt.plot(T, eso2[:, 1])
-plt.plot(T, Q[:, 3], 'r')
-plt.show()
+if tryb_PD == 0:
+    plt.subplot(221)
+    plt.plot(T, eso1[:, 0])
+    plt.plot(T, Q[:, 0], 'r')
+    plt.subplot(222)
+    plt.plot(T, eso1[:, 1])
+    plt.plot(T, Q[:, 2], 'r')
+    plt.subplot(223)
+    plt.plot(T, eso2[:, 0])
+    plt.plot(T, Q[:, 1], 'r')
+    plt.subplot(224)
+    plt.plot(T, eso2[:, 1])
+    plt.plot(T, Q[:, 3], 'r')
+    plt.show()
 
 plt.subplot(221)
 plt.plot(T, Q[:, 0], 'r')
@@ -61,3 +79,15 @@ plt.subplot(223)
 plt.plot(T, u[:, 0], 'r')
 plt.plot(T, u[:, 1], 'b')
 plt.show()
+
+e = Q[:, 0:2] - Q_d[:, 0:2]
+
+rmse = np.sqrt(np.mean(e ** 2, axis=0))
+max_abs = np.max(np.abs(e), axis=0)
+
+print("RMSE q1:", rmse[0])
+print("RMSE q2:", rmse[1])
+print("max abs e1:", max_abs[0])
+print("max abs e2:", max_abs[1])
+print("max abs u1:", np.max(np.abs(u[:, 0])))
+print("max abs u2:", np.max(np.abs(u[:, 1])))

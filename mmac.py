@@ -11,16 +11,17 @@ from trajectory_generators.sinusonidal import Sinusoidal
 from trajectory_generators.poly3 import Poly3
 from utils.simulation import simulate
 
+
 """http://www.gipsa-lab.fr/~ioandore.landau/adaptivecontrol/Transparents/Courses/AdaptiveCourse5GRK.pdf"""
 
 Tp = 0.01
-end = 3.
+end = 3.0
 
 
 # TODO: Switch to MMAC as soon as you implement it
-#controller = MMAController(Tp)
-controller = FeedbackLinearizationController(Tp)
-controller = DummyController(Tp)
+controller = MMAController(Tp)
+#controller = FeedbackLinearizationController(Tp)
+#controller = DummyController(Tp)
 
 """
 Here you have some trajectory generators. You can use them to check your implementations.
@@ -45,3 +46,14 @@ plt.plot(T, u[:, 0], 'r', label="u_1")
 plt.plot(T, u[:, 1], 'b', label="u_2")
 plt.legend()
 plt.show()
+
+
+e = Q[:, 0:2] - Q_d[:, 0:2]
+
+rmse = np.sqrt(np.mean(e ** 2, axis=0))
+max_abs = np.max(np.abs(e), axis=0)
+
+print("RMSE q1:", rmse[0])
+print("RMSE q2:", rmse[1])
+print("max abs e1:", max_abs[0])
+print("max abs e2:", max_abs[1])
